@@ -1,0 +1,5 @@
+---
+trigger: always_on
+---
+
+This repository is a Preview Environments Platform Template, not an application repository. Do not add FastAPI, Django, frontend, dashboard, or business logic here. The project follows a strict MVP-gate approach. Current MVP scope is limited to local Kubernetes-based preview environments using Docker, GitHub Actions, GHCR, Helm, ingress-nginx, Argo CD, and ApplicationSet Pull Request Generator. Do not introduce Terraform, EKS, Cloudflare, cert-manager, observability, messaging systems, control-plane services, or CLI scaffolding until the local preview lifecycle is fully working. Always prefer the simplest working implementation. For every task, explain the goal, files changed, commands to run, validation steps, and definition of done. Never perform destructive actions without explicit approval.
