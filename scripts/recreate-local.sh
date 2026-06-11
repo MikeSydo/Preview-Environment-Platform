@@ -39,9 +39,7 @@ echo "Deploying preview app..."
 helm upgrade --install "${RELEASE_NAME}" helm/preview-app \
   --namespace "${APP_NS}" \
   --create-namespace \
-  --set ingress.hosts[0].host="localhost" \
-  --set ingress.hosts[0].paths[0].path="/" \
-  --set ingress.hosts[0].paths[0].pathType="Prefix"
+  --set ingress.host="localhost"
 
 echo "Waiting for preview app rollout..."
 kubectl rollout status deployment/${RELEASE_NAME}-preview-app -n "${APP_NS}" --timeout=180s || true
