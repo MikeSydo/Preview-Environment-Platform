@@ -9,6 +9,7 @@ Its goal is to automatically create isolated preview environments for pull reque
 - [MVP Scope](docs/mvp.md)
 - [Roadmap](docs/roadmap.md)
 - [Local Setup](docs/local-setup.md)
+- [GitOps Flow with Argo CD](docs/gitops-flow.md)
 
 ## Quick Start (Local Setup)
 
