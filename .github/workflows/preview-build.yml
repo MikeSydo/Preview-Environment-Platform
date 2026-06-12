@@ -16,6 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV  
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -28,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/preview-app:pr-${{ github.event.pull_request.number }}
+          tags: ghcr.io/${{ env.OWNER }}/preview-app:pr-${{ github.event.pull_request.number }}
