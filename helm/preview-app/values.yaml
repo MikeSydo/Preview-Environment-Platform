@@ -4,6 +4,8 @@ image:
   repository: nginxdemos/hello
   pullPolicy: IfNotPresent
   tag: "plain-text"
+  imagePullSecrets:
+  - name: ghcr-secret
 
 service:
   type: ClusterIP
