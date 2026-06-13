@@ -38,7 +38,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode("utf-8"))
 
 if __name__ == "__main__":
-    port = 8000
+    port = 80
     server = HTTPServer(("", port), Handler)
     print(f"Serving on port {port}…")
     server.serve_forever()
