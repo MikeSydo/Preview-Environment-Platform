@@ -1,60 +1,136 @@
-# Preview Environments Platform Template
+# Preview Environment Platform
 
-This repository is a **Preview Environments Platform Template** for containerized applications.
+A GitOps-based preview environment platform for pull requests using GitHub Actions, Argo CD, Helm, and Kubernetes.
 
-Its goal is to automatically create isolated preview environments for pull requests in Kubernetes, expose a preview URL, and clean up resources after the pull request is closed or merged.
+This repository serves two purposes:
 
-## Full Preview Lifecycle
+1. A **local template** for running per-PR preview environments on a local Kubernetes cluster.
+2. A foundation for a future **hosted preview platform** deployed in the cloud.
 
-```
-PR opens → image builds (GitHub Actions + GHCR) → Argo CD ApplicationSet detects PR
-         → preview namespace created → ingress route active → preview URL reachable
-PR closes → ApplicationSet prunes → namespace deleted
-```
+## Overview
 
-## Documentation
+For every pull request, the platform can:
 
-| Doc | Purpose |
-|-----|---------|
-| [docs/mvp.md](docs/mvp.md) | MVP scope and success criteria |
-| [docs/roadmap.md](docs/roadmap.md) | Weekly delivery plan |
-| [docs/local-setup.md](docs/local-setup.md) | Local cluster bootstrap and ingress verification |
-| [docs/gitops-flow.md](docs/gitops-flow.md) | Argo CD installation and GitOps configuration |
-| [docs/preview-lifecycle.md](docs/preview-lifecycle.md) | ApplicationSet preview lifecycle and cleanup |
-| [docs/onboarding.md](docs/onboarding.md) | End-to-end onboarding for new contributors |
+- Build and push a preview Docker image to GHCR.
+- Create or update a PR comment with the preview URL.
+- Publish a GitHub status check with a direct link to the preview environment.
+- Deploy a dedicated preview environment through Argo CD and Helm.
+- Remove environments automatically when PRs are closed.
+- Optionally clean up stale preview environments after a TTL period.
 
-## Quick Start
+## Lifecycle
+See preview environment lifecycle in following doc:
+- [preview-lifecycle.md](./docs/preview-lifecycle.md) 
 
-See [docs/onboarding.md](docs/onboarding.md) for the full step-by-step setup.
+## Preview label requirement
 
-```bash
-# 1. Verify tooling
-bash scripts/bootstrap-local.sh
+Preview environments are created **only** for pull requests that have the `preview` label.
 
-# 2. Create cluster
-k3d cluster create preview-cluster --k3s-arg "--disable=traefik@server:0" \
-  --api-port 6550 -p "8081:80@loadbalancer" -p "8443:443@loadbalancer" --agents 1
+This behavior is controlled by the Argo CD `ApplicationSet` pull request generator. If a pull request does not have the `preview` label, no preview namespace, application, or ingress will be created. GitHub workflow steps may still run, but the actual Kubernetes preview environment is gated by the label.
 
-# 3. Install ingress-nginx and Argo CD
-helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
-bash scripts/install-argocd.sh
+Typical flow:
 
-# 4. Apply GitOps config
-kubectl apply -f argocd/project.yaml
-kubectl apply -f argocd/application.yaml
+1. Open or update a pull request.
+2. Add the `preview` label.
+3. Argo CD detects the labeled PR and creates the preview environment.
+4. Remove the label or close the PR to let the environment be cleaned up on the next reconcile loop.
 
-# 5. Enable PR previews (requires GitHub PAT secret)
-kubectl create secret generic github-token --from-literal=token=<YOUR_PAT> -n argocd
-kubectl apply -f argocd/applicationset-preview.yaml
+## Architecture
+
+```text
+Pull Request opened or updated
+        ↓
+GitHub Actions builds and pushes image to GHCR
+        ↓
+Argo CD ApplicationSet detects open PR with `preview` label
+        ↓
+Helm deploys preview app into a dedicated namespace
+        ↓
+Ingress exposes preview URL
+        ↓
+GitHub PR comment + status check link to the environment
 ```
 
 ## Repository Structure
 
+```text
+.github/workflows/       GitHub Actions workflows
+argocd/                  Argo CD manifests and ApplicationSets
+helm/preview-app/        Helm chart for preview deployments
+scripts/                 Local bootstrap and utility scripts
+docs/                    Technical and operational documentation
+examples/                Example app or sample assets
 ```
-.github/workflows/    # GitHub Actions (image build + push)
-argocd/               # Argo CD Project, Application, ApplicationSet manifests
-docs/                 # Documentation
-examples/             # Demo Dockerfile and usage examples
-helm/preview-app/     # Reusable Helm chart for preview deployments
-scripts/              # Bootstrap and install helpers
+
+## Features
+
+- Per-PR isolated preview environments
+- GitOps deployment flow with Argo CD
+- Helm-based application templating
+- Automatic PR comments with preview links
+- GitHub commit status integration
+- Label-gated preview creation
+- Local development support
+- Extensible path to cloud deployment on EKS or GKE
+
+## Requirements
+
+- Kubernetes cluster
+- kubectl
+- Helm
+- Argo CD
+- Docker
+- GitHub repository with Actions enabled
+- GHCR access for pushing images
+  
+## Local Setup
+
+See the following docs:
+
+- [onboarding.md](./docs/onboarding.md)
+- [local-setup.md](./docs/local-setup.md)
+- [gitops-flow.md](./docs/gitops-flow.md) 
+
+## Quick Start
+
+1. Clone this repository.
+2. Bootstrap the local environment.
+3. Install Argo CD.
+4. Apply the ApplicationSet.
+5. Open a pull request in the connected repository.
+6. Add the `preview` label to the PR.
+7. Verify the image build, Argo CD sync, and preview comment.
+
+Example scripts:
+
+```bash
+./scripts/bootstrap-local.sh
+./scripts/install-argocd.sh
 ```
+
+## TTL Cleanup
+
+This repository can support scheduled cleanup of inactive preview environments.
+
+Typical behavior:
+
+- If a labeled PR is open but inactive for N days, the preview environment is removed.
+- When a new commit is pushed to the same labeled PR, Argo CD can recreate the preview environment automatically after the image is rebuilt.
+
+## Roadmap
+
+The next milestones focus on turning this local template into a cloud-ready, reusable preview platform.
+
+- Cloud deployment on EKS
+- Hosted multi-repository platform
+- GitHub App integration
+- Better lifecycle policies for stale environments
+- Organization-level onboarding flow
+
+## Contributing
+
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting changes.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE).
