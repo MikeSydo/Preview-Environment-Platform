@@ -1,6 +1,9 @@
-# Demo Dockerfile for Preview Environment
-# Replace this with your actual application Dockerfile.
-# The GitHub Actions workflow (preview-build.yml) will build and push
-# this image to GHCR tagged as pr-<number> for each pull request.
+FROM python:3.12-slim
 
-FROM nginxdemos/hello:plain-text
+WORKDIR /app
+
+COPY app.py .
+
+EXPOSE 8000
+
+CMD ["python", "app.py"]
