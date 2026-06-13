@@ -29,6 +29,7 @@ jobs:
       - name: Create or update PR comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
+          number: ${{ steps.pr.outputs.number }}
           message: >
             Preview environment is ready:
             http://pr-${{ steps.pr.outputs.number }}.localhost:8081
