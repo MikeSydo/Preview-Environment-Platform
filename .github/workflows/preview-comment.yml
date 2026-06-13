@@ -1,0 +1,34 @@
+name: Preview Comment
+
+on:
+  workflow_run:
+    workflows: ["Preview Build"]
+    types:
+      - completed
+jobs:
+  comment-preview-url:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Find PR number
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          script: |
+            const prs = context.payload.workflow_run.pull_requests;
+            if (!prs || prs.length === 0) {
+              core.setFailed("No pull request found for this workflow run");
+              return;
+            }
+            core.setOutput("number", prs[0].number.toString());
+
+
+      - name: Create or update PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: >
+            Preview environment is ready:
+            http://pr-${{ steps.pr.outputs.number }}.localhost:8081
